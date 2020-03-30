@@ -6,7 +6,7 @@
 
     <groupId>io.miscellanea.vertx.example</groupId>
     <artifactId>VertXJpa</artifactId>
-    <version>1.0</version>
+    <version>1.1</version>
 
     <properties>
         <vertx.version>3.8.5</vertx.version>
@@ -23,6 +23,11 @@
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-web</artifactId>
+            <version>${vertx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-config</artifactId>
             <version>${vertx.version}</version>
         </dependency>
 
@@ -77,7 +82,7 @@
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
-                                        <Main-Class>io.miscellanea.vertx.example.VertXHibernateDeployer</Main-Class>
+                                        <Main-Class>io.miscellanea.vertx.example.VertXJpaDeployer</Main-Class>
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
