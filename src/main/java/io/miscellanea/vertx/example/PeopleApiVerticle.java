@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 
+import static io.miscellanea.vertx.example.BusAddress.*;
+
 /**
  * A Vert.x verticle that implements the People resource for our example API.
  *
@@ -43,6 +45,10 @@ public class PeopleApiVerticle extends AbstractVerticle {
     router.get("/api/people/:id").handler(this::getPerson);
     router.post("/api/people").handler(this::createPerson);
 
+    LOGGER.debug(
+        "Will bind API verticle to TCP port {}.",
+        config().getInteger(ConfigProps.ApiBindPort.toString()));
+
     // Create the HTTP server. Since this may take a while, we're
     // using the Promise passed to this method to tell Vert.x when
     // this verticle is fully deployed.
@@ -50,7 +56,7 @@ public class PeopleApiVerticle extends AbstractVerticle {
         .createHttpServer()
         .requestHandler(router)
         .listen(
-            8080,
+            config().getInteger(ConfigProps.ApiBindPort.toString()),
             result -> {
               if (result.succeeded()) {
                 LOGGER.debug("HTTP server started successfully.");
@@ -85,7 +91,7 @@ public class PeopleApiVerticle extends AbstractVerticle {
     vertx
         .eventBus()
         .request(
-            "repo.person.list",
+            RepositoryPersonList.toString(),
             payload,
             reply -> this.sendGetResponse(routingContext, reply.result()));
   }
@@ -108,7 +114,7 @@ public class PeopleApiVerticle extends AbstractVerticle {
     vertx
         .eventBus()
         .request(
-            "repo.person.find",
+            RepositoryPersonFind.toString(),
             payload,
             reply -> this.sendGetResponse(routingContext, reply.result()));
   }
@@ -129,7 +135,7 @@ public class PeopleApiVerticle extends AbstractVerticle {
       vertx
           .eventBus()
           .request(
-              "repo.person.create",
+              RepositoryPersonCreate.toString(),
               payload,
               reply -> this.sendPostResponse(routingContext, reply.result()));
     }
@@ -143,9 +149,10 @@ public class PeopleApiVerticle extends AbstractVerticle {
 
     if (result == null
         || ("{}".equals(result.getString("result")) || "[]".equals(result.getString("result")))) {
+      var reqId = result == null ? UUID.randomUUID().toString() : result.getString("request-id");
       routingContext
           .response()
-          .putHeader("X-request-id", result.getString("request-id"))
+          .putHeader("X-request-id", reqId)
           .setStatusCode(404)
           .end();
     } else {

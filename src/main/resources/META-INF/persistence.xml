@@ -16,7 +16,7 @@ http://www.oracle.com/webfolder/technetwork/jsc/xml/ns/persistence/persistence_2
             <property name="hibernate.hikari.dataSource.user" value="sa" />
             <property name="hibernate.hikari.dataSource.password" value="sa" />
             <property name="hibernate.hikari.dataSourceClassName" value="org.h2.jdbcx.JdbcDataSource" />
-            <property name="hibernate.hikari.maximumPoolSize" value="1" />
+            <property name="hibernate.hikari.maximumPoolSize" value="10" />
             <!--
             The following properties are not available on H2 but you should consider setting for a
             server-based RDBMS like PostgreSQL or MS SQL Server.

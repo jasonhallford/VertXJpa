@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
+import static io.miscellanea.vertx.example.BusAddress.*;
 import static io.miscellanea.vertx.example.PersistenceManager.*;
 
 /**
@@ -34,9 +35,9 @@ public class PersonJpaRepositoryVerticle extends AbstractVerticle {
     // and interest in named events that represent its core operations: create,
     // find, and list. The runtime will invoke these handlers when the API
     // verticle requires access to the persistence layer.
-    bus.consumer("repo.person.create", this::createPerson);
-    bus.consumer("repo.person.find", this::findPerson);
-    bus.consumer("repo.person.list", this::listPeople);
+    bus.consumer(RepositoryPersonCreate.toString(), this::createPerson);
+    bus.consumer(RepositoryPersonFind.toString(), this::findPerson);
+    bus.consumer(RepositoryPersonList.toString(), this::listPeople);
     LOGGER.debug("Handlers registered.");
 
     LOGGER.info("JPA verticle started.");
@@ -88,8 +89,7 @@ public class PersonJpaRepositoryVerticle extends AbstractVerticle {
 
     try {
       List<Person> people =
-              INSTANCE.<Person>find(
-                      em -> em.createQuery("select p from Person p").getResultList());
+          INSTANCE.<Person>find(em -> em.createQuery("select p from Person p").getResultList());
 
       // Convert the response to a JSON array.
       var mapper = new ObjectMapper();
