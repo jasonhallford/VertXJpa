@@ -13,7 +13,7 @@ efficient connection pooling in a Java SE environment.
 ## Requirements
 To build this example, you will need the following:
 1. A version of Git capable of cloning this repository from Git Hub
-1. Apache Maven v3.6 or greater
+1. Apache Maven v3.5 or greater
 1. The latest patch release of OpenJDK 11 (build produced by the [AdoptOpenJDK Project](https://adoptopenjdk.net/) work
 nicely)
 
