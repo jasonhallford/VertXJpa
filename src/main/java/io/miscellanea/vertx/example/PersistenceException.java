@@ -6,12 +6,12 @@ package io.miscellanea.vertx.example;
  * @author Jason Hallford
  */
 public class PersistenceException extends RuntimeException {
-    // Constructors
-    public PersistenceException(String message){
-        super(message);
-    }
+  // Constructors
+  public PersistenceException(String message) {
+    super(message);
+  }
 
-    public PersistenceException(String message, Throwable cause){
-        super(message,cause);
-    }
+  public PersistenceException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }

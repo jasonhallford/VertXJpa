@@ -71,26 +71,25 @@ public enum PersistenceManager {
         LOGGER.debug("Executing find operation with managed entity manager.");
         result = func.apply(em);
       } catch (Exception e) {
-        throw new PersistenceException(
-                "Unable to execute find operation.", e);
+        throw new PersistenceException("Unable to execute find operation.", e);
       } finally {
         try {
           em.close();
         } catch (Exception e) {
           LOGGER.error(
-                  "Unable to close entity manager! This may cause a leak in the connection pool.", e);
+              "Unable to close entity manager! This may cause a leak in the connection pool.", e);
         }
       }
 
     } catch (Exception e) {
       throw new PersistenceException(
-              "Unable to retrieve an entity manager from Persistence Manager.", e);
+          "Unable to retrieve an entity manager from Persistence Manager.", e);
     }
 
     return result;
   }
 
-  public <T> T persist(T entity){
+  public <T> T persist(T entity) {
     T result;
     EntityManager em;
 
@@ -105,19 +104,20 @@ public enum PersistenceManager {
       } catch (Exception e) {
         em.getTransaction().rollback();
         throw new PersistenceException(
-                "An error occurred while saving the object to the database; transaction rolled-back.", e);
+            "An error occurred while saving the object to the database; transaction rolled-back.",
+            e);
       } finally {
         try {
           em.close();
         } catch (Exception e) {
           LOGGER.error(
-                  "Unable to close entity manager! This may cause a leak in the connection pool.", e);
+              "Unable to close entity manager! This may cause a leak in the connection pool.", e);
         }
       }
 
     } catch (Exception e) {
       throw new PersistenceException(
-              "Unable to retrieve an entity manager from Persistence Manager.", e);
+          "Unable to retrieve an entity manager from Persistence Manager.", e);
     }
 
     return result;

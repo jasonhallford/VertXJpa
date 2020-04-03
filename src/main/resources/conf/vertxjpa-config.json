@@ -1,5 +1,5 @@
 {
-  "jpa_verticle_count": 2,
-  "api_verticle_count": 1,
-  "api_bind_port": 8080
+  "jpa-verticle-count": 2,
+  "api-verticle-count": 1,
+  "bind-port": 8080
 }

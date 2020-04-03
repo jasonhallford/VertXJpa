@@ -13,19 +13,17 @@ import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 
-import static io.miscellanea.vertx.example.BusAddress.*;
-
 /**
  * A Vert.x verticle that implements the People resource for our example API.
  *
  * @author Jason Hallford
  */
-public class PeopleApiVerticle extends AbstractVerticle {
+public class ApiVerticle extends AbstractVerticle {
   // Fields
-  private static final Logger LOGGER = LoggerFactory.getLogger(PeopleApiVerticle.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ApiVerticle.class);
 
   // Constructors
-  public PeopleApiVerticle() {}
+  public ApiVerticle() {}
 
   // Vert.x life-cycle management
   @Override
@@ -46,8 +44,7 @@ public class PeopleApiVerticle extends AbstractVerticle {
     router.post("/api/people").handler(this::createPerson);
 
     LOGGER.debug(
-        "Will bind API verticle to TCP port {}.",
-        config().getInteger(ConfigProps.ApiBindPort.toString()));
+        "Will bind API verticle to TCP port {}.", config().getInteger(ConfigProp.BIND_PORT));
 
     // Create the HTTP server. Since this may take a while, we're
     // using the Promise passed to this method to tell Vert.x when
@@ -56,7 +53,7 @@ public class PeopleApiVerticle extends AbstractVerticle {
         .createHttpServer()
         .requestHandler(router)
         .listen(
-            config().getInteger(ConfigProps.ApiBindPort.toString()),
+            config().getInteger(ConfigProp.BIND_PORT),
             result -> {
               if (result.succeeded()) {
                 LOGGER.debug("HTTP server started successfully.");
@@ -81,7 +78,7 @@ public class PeopleApiVerticle extends AbstractVerticle {
     LOGGER.debug("getPeople() called. Dispatching event to JPA verticle.");
 
     var payload = new JsonObject();
-    payload.put("request-id", UUID.randomUUID().toString());
+    payload.put(MessageField.REQUEST_ID, UUID.randomUUID().toString());
 
     // We use the event bus' request-reply pattern to ensure that:
     // 1. If we have more than one JPA verticle that only one will process
@@ -91,7 +88,7 @@ public class PeopleApiVerticle extends AbstractVerticle {
     vertx
         .eventBus()
         .request(
-            RepositoryPersonList.toString(),
+            EventBusAddress.REPOSITORY_PERSON_LIST,
             payload,
             reply -> this.sendGetResponse(routingContext, reply.result()));
   }
@@ -103,8 +100,8 @@ public class PeopleApiVerticle extends AbstractVerticle {
     LOGGER.debug("Requested person is is {}.", id);
 
     var payload = new JsonObject();
-    payload.put("request-id", UUID.randomUUID().toString());
-    payload.put("entity-id", id);
+    payload.put(MessageField.REQUEST_ID, UUID.randomUUID().toString());
+    payload.put(MessageField.ENTITY_ID, id);
 
     // We use the event bus' request-reply pattern to ensure that:
     // 1. If we have more than one JPA verticle that only one will process
@@ -114,7 +111,7 @@ public class PeopleApiVerticle extends AbstractVerticle {
     vertx
         .eventBus()
         .request(
-            RepositoryPersonFind.toString(),
+            EventBusAddress.REPOSITORY_PERSON_FIND,
             payload,
             reply -> this.sendGetResponse(routingContext, reply.result()));
   }
@@ -130,12 +127,12 @@ public class PeopleApiVerticle extends AbstractVerticle {
 
       // The 'request-id' is a correlation ID that follows the request between verticles. It
       // facilitates debugging through logs and is presented to the user in each response.
-      payload.put("request-id", UUID.randomUUID().toString());
+      payload.put(MessageField.REQUEST_ID, UUID.randomUUID().toString());
 
       vertx
           .eventBus()
           .request(
-              RepositoryPersonCreate.toString(),
+              EventBusAddress.REPOSITORY_PERSON_CREATE,
               payload,
               reply -> this.sendPostResponse(routingContext, reply.result()));
     }
@@ -148,22 +145,20 @@ public class PeopleApiVerticle extends AbstractVerticle {
     var result = (JsonObject) message.body();
 
     if (result == null
-        || ("{}".equals(result.getString("result")) || "[]".equals(result.getString("result")))) {
-      var reqId = result == null ? UUID.randomUUID().toString() : result.getString("request-id");
-      routingContext
-          .response()
-          .putHeader("X-request-id", reqId)
-          .setStatusCode(404)
-          .end();
+        || ("{}".equals(result.getString(MessageField.RESULT))
+            || "[]".equals(result.getString(MessageField.RESULT)))) {
+      var reqId =
+          result == null ? UUID.randomUUID().toString() : result.getString(MessageField.REQUEST_ID);
+      routingContext.response().putHeader("X-request-id", reqId).setStatusCode(404).end();
     } else {
       var response = routingContext.response().putHeader("content-type", "application/json");
 
-      switch (result.getString("status")) {
+      switch (result.getString(MessageField.STATUS)) {
         case "ok":
-          response.setStatusCode(200).end(result.getString("result"));
+          response.setStatusCode(200).end(result.getString(MessageField.RESULT));
           break;
         case "err":
-          response.setStatusCode(500).end(result.getString("message"));
+          response.setStatusCode(500).end(result.getString(MessageField.ERROR));
           break;
         default:
           response.setStatusCode(500).end("An unknown error occurred.");
@@ -177,7 +172,7 @@ public class PeopleApiVerticle extends AbstractVerticle {
 
     var result = (JsonObject) message.body();
 
-    int statusCode = "ok".equalsIgnoreCase(result.getString("status")) ? 201 : 500;
+    int statusCode = "ok".equalsIgnoreCase(result.getString(MessageField.STATUS)) ? 201 : 500;
 
     var response =
         routingContext
@@ -186,7 +181,7 @@ public class PeopleApiVerticle extends AbstractVerticle {
             .setStatusCode(statusCode);
 
     if (statusCode == 201) {
-      var persisted = (JsonObject) Json.decodeValue(result.getString("result"));
+      var persisted = (JsonObject) Json.decodeValue(result.getString(MessageField.RESULT));
       var location = "/api/people/" + persisted.getInteger("id");
 
       LOGGER.debug("Setting HTTP location header to '{}'", location);

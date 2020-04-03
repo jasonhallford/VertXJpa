@@ -8,22 +8,24 @@ import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
-import static io.miscellanea.vertx.example.BusAddress.*;
-import static io.miscellanea.vertx.example.PersistenceManager.*;
+import static io.miscellanea.vertx.example.PersistenceManager.INSTANCE;
 
 /**
  * A JPA-based repository for Person objects implemented as Vert.x worker verticle.
  *
  * @author Jason Hallford
  */
-public class PersonJpaRepositoryVerticle extends AbstractVerticle {
+public class JpaRepositoryVerticle extends AbstractVerticle {
   // Fields
-  private static final Logger LOGGER = LoggerFactory.getLogger(PersonJpaRepositoryVerticle.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(JpaRepositoryVerticle.class);
 
   // Constructors
-  public PersonJpaRepositoryVerticle() {}
+  public JpaRepositoryVerticle() {}
 
   // Verticle life-cycle management
   @Override
@@ -35,9 +37,9 @@ public class PersonJpaRepositoryVerticle extends AbstractVerticle {
     // and interest in named events that represent its core operations: create,
     // find, and list. The runtime will invoke these handlers when the API
     // verticle requires access to the persistence layer.
-    bus.consumer(RepositoryPersonCreate.toString(), this::createPerson);
-    bus.consumer(RepositoryPersonFind.toString(), this::findPerson);
-    bus.consumer(RepositoryPersonList.toString(), this::listPeople);
+    bus.consumer(EventBusAddress.REPOSITORY_PERSON_CREATE, this::createPerson);
+    bus.consumer(EventBusAddress.REPOSITORY_PERSON_FIND, this::findPerson);
+    bus.consumer(EventBusAddress.REPOSITORY_PERSON_LIST, this::listPeople);
     LOGGER.debug("Handlers registered.");
 
     LOGGER.info("JPA verticle started.");
@@ -63,8 +65,8 @@ public class PersonJpaRepositoryVerticle extends AbstractVerticle {
         // Return the results as a JSON array.
         String jsonString = this.convertPersonToJson(persistedPerson);
         if (jsonString != null) {
-          reply.put("status", "ok");
-          reply.put("result", jsonString);
+          reply.put(MessageField.STATUS, "ok");
+          reply.put(MessageField.RESULT, jsonString);
         } else {
           throw new PersistenceException("Unable to convert Person to JSON.");
         }
@@ -75,8 +77,8 @@ public class PersonJpaRepositoryVerticle extends AbstractVerticle {
       LOGGER.error("Unable to save person to database; returning error reply.", e);
 
       // Return an error status to the message's originator.
-      reply.put("status", "err");
-      reply.put("error", e.getMessage());
+      reply.put(MessageField.STATUS, "err");
+      reply.put(MessageField.ERROR, e.getMessage());
     }
 
     message.reply(reply);
@@ -89,7 +91,7 @@ public class PersonJpaRepositoryVerticle extends AbstractVerticle {
 
     try {
       List<Person> people =
-          INSTANCE.<Person>find(em -> em.createQuery("select p from Person p").getResultList());
+          INSTANCE.find(em -> em.createQuery("select p from Person p").getResultList());
 
       // Convert the response to a JSON array.
       var mapper = new ObjectMapper();
@@ -97,15 +99,15 @@ public class PersonJpaRepositoryVerticle extends AbstractVerticle {
       LOGGER.debug("Query results as JSON = {}", jsonString);
 
       // Return the results as a JSON array.
-      reply.put("status", "ok");
-      reply.put("result", jsonString);
+      reply.put(MessageField.STATUS, "ok");
+      reply.put(MessageField.RESULT, jsonString);
     } catch (PersistenceException | JsonProcessingException e) {
       LOGGER.error(
           "Unable to read from database or marshal results to JSON; returning error reply.", e);
 
       // Return an error status to the message's originator.
-      reply.put("status", "err");
-      reply.put("error", e.getMessage());
+      reply.put(MessageField.STATUS, "err");
+      reply.put(MessageField.ERROR, e.getMessage());
     }
 
     message.reply(reply);
@@ -113,8 +115,9 @@ public class PersonJpaRepositoryVerticle extends AbstractVerticle {
 
   private void findPerson(Message<JsonObject> message) {
     LOGGER.debug(
-        "Finding person with id {} in the database.", message.body().getString("entity-id"));
-    Long entityId = Long.parseLong(message.body().getString("entity-id"));
+        "Finding person with id {} in the database.",
+        message.body().getString(MessageField.ENTITY_ID));
+    Long entityId = Long.parseLong(message.body().getString(MessageField.ENTITY_ID));
 
     var reply = prepareReply(message);
 
@@ -134,22 +137,23 @@ public class PersonJpaRepositoryVerticle extends AbstractVerticle {
       }
       LOGGER.debug("Query results as JSON = {}", jsonString);
 
-      reply.put("status", "ok");
-      reply.put("result", jsonString);
+      reply.put(MessageField.STATUS, "ok");
+      reply.put(MessageField.RESULT, jsonString);
     } catch (PersistenceException | JsonProcessingException e) {
       LOGGER.error(
           "Unable to read from database or marshal results to JSON; returning error reply.", e);
 
       // Return an error status to the message's originator.
-      reply.put("status", "err");
-      reply.put("error", e.getMessage());
+      reply.put(MessageField.STATUS, "err");
+      reply.put(MessageField.RESULT, e.getMessage());
     }
 
     message.reply(reply);
   }
 
   private JsonObject prepareReply(Message<JsonObject> message) {
-    return new JsonObject().put("request-id", message.body().getValue("request-id"));
+    return new JsonObject()
+        .put(MessageField.REQUEST_ID, message.body().getValue(MessageField.REQUEST_ID));
   }
 
   private Optional<Person> convertJsonToPerson(JsonObject json) {

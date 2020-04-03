@@ -8,8 +8,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 /**
- * JPA entity class that represents our API's only resource, a "person"
- * with a name and an age.
+ * JPA entity class that represents our API's only resource, a "person" with a name and an age.
  *
  * @author Jason Hallford
  */

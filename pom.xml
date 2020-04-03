@@ -6,7 +6,7 @@
 
     <groupId>io.miscellanea.vertx.example</groupId>
     <artifactId>vertx-jpa</artifactId>
-    <version>1.1</version>
+    <version>1.2</version>
 
     <properties>
         <vertx.version>3.8.5</vertx.version>
@@ -82,7 +82,7 @@
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
-                                        <Main-Class>io.miscellanea.vertx.example.VertXJpaDeployer</Main-Class>
+                                        <Main-Class>io.miscellanea.vertx.example.JpaDeployer</Main-Class>
                                     </manifestEntries>
                                 </transformer>
                             </transformers>

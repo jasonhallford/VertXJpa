@@ -23,13 +23,13 @@ You may build the example in one of two ways, as a JAR or a Docker image.
 You may build JAR from source using [Apache Maven](http://maven.apache.org). Assuming a version >= 3.6.0 you can build it  by
 executing `mvn package` at the command line (assuming `mvn` is in the path, of course). In the project's /target
 directory, this will produce
-* A JAR file named __VertXJpa-1.1.jar__, which contains just the project's classes
-* A fat JAR named __VertXJpa-1.1-fat.jar__; you can use this to run the code by executing `java -jar VertXJpa-1.0-fat.jar`
+* A JAR file named __vertx-jpa-1.2.jar__, which contains just the project's classes
+* A fat JAR named __vertx-jpa-1.2-fat.jar__; you can use this to run the code by executing `java -jar VertXJpa-1.0-fat.jar`
 at your favorite command line
 ### Building as a Docker Image
 You may use the included Dockerfile to create a deployable image. From the source directory, run the following
-command to build the image: `docker build -t vertxjpa:1.1 .`. Here, the resulting image will have the tag
-__vertxjpa:1.1__. 
+command to build the image: `docker build -t vertxjpa:1.2 .`. Here, the resulting image will have the tag
+__vertxjpa:1.2__. 
 
 Run the container with the following command: `docker run --rm -p 8080:8080 --name vertxjpa vertxjpa:1.0`. You will 
 be able to connect to the app at http://localhost:8080.
@@ -43,8 +43,9 @@ The TCP port and number of JPA verticles may be customized by setting the follow
 variables or JRE system proprties (i.e. "-D" properties). The latter have a higher priority than the former.
 | Property          | Notes                                                        |
 | ----------------- | ------------------------------------------------------------ |
-| api_bind port     | An integer value that sets the API verticle's TCP bind port. |
-|jpa_verticle_count | An integer value that speicified the number of JPA verticles to create. | 
+| bind-port     | An integer value that sets the API verticle's TCP bind port. |
+| jpa-verticle-count | An integer value that speicified the number of JPA verticles to create; defaults to 2. | 
+| api-verticle-count | An integer value that speicified the number of API verticles to create; defaults to 1. |
 
 ## Running the Example
 Unless configured otherwise, the sample application presents a basic RESTful API on port TCP/8080 for a generic "Person" 

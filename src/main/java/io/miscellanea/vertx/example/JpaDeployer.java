@@ -6,8 +6,8 @@ import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Main class used to initialize the JPA runtime (Hibernate, in this case) and deploy the example's
@@ -16,16 +16,16 @@ import org.slf4j.Logger;
  * <ol>
  *   <li><code>PeopleApiVertical</code>, which presents a simple RESTful API for creating, listing,
  *       and finding instances of <code>Person</code>
- *   <li><code>PersonJpaRepositoryVerticle</code>, which executes as a worker verticle and handles
- *       the JPA interface with the database (H2, in this case)
+ *   <li><code>JpaRepositoryVerticle</code>, which executes as a worker verticle and handles the JPA
+ *       interface with the database (H2, in this case)
  * </ol>
  *
  * This is example code, and as such is light on error handling, etc. It's primary purpose is to
  * demonstrate how one might integrate JPA with Vert.x to implement a database-backed API.
  */
-public class VertXJpaDeployer {
+public class JpaDeployer {
   // Fields
-  private static final Logger LOGGER = LoggerFactory.getLogger(VertXJpaDeployer.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(JpaDeployer.class);
 
   public static void main(String[] args) {
     LOGGER.debug("Bootstrapping the Vert.x runtime...");
@@ -65,8 +65,7 @@ public class VertXJpaDeployer {
     ConfigRetriever.create(vertx, configRetrieverOpts)
         .getConfig(
             config -> {
-              int jpaCount = config.result().getInteger(ConfigProps.JpaVerticleCount.toString());
-
+              int jpaCount = config.result().getInteger(ConfigProp.JPA_VERTICLE_COUNT);
               LOGGER.debug("Deploying {} instance(s) of the JPA verticle.", jpaCount);
 
               // Deploy the JPA verticle. Note that we must deploy the verticle by name, not
@@ -76,11 +75,15 @@ public class VertXJpaDeployer {
                       .setConfig(config.result())
                       .setInstances(jpaCount)
                       .setWorker(true);
-              vertx.deployVerticle(PersonJpaRepositoryVerticle.class.getName(), jpaOpts);
+              vertx.deployVerticle(JpaRepositoryVerticle.class.getName(), jpaOpts);
 
               // Deploy the REST API verticle
-              var apiOpts = new DeploymentOptions().setConfig(config.result());
-              vertx.deployVerticle(PeopleApiVerticle.class.getName(), apiOpts);
+              int apiCount = config.result().getInteger(ConfigProp.API_VERTICLE_COUNT);
+              LOGGER.debug("Deploying {} instance(s) of the API verticle.", jpaCount);
+
+              var apiOpts =
+                  new DeploymentOptions().setConfig(config.result()).setInstances(apiCount);
+              vertx.deployVerticle(ApiVerticle.class.getName(), apiOpts);
             });
   }
 }
